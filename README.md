@@ -1,132 +1,119 @@
-# 🧠 Customer Churn Prediction using Machine Learning
+# 📡 Customer Churn Prediction — Telco Industry
 
-This project builds an end-to-end **machine learning framework for predicting customer churn** using the Telco Customer dataset.  
-The goal is to identify customers at risk of leaving and understand the key drivers behind churn using interpretable AI techniques.
-
----
-
-## 🚀 Project Objectives
-
-- Predict customer churn (binary classification problem)
-- Handle class imbalance using SMOTE and class weighting
-- Compare multiple machine learning models
-- Build an interpretable and business-driven solution
-- Identify key factors influencing churn using feature importance
+A complete end-to-end machine learning pipeline for predicting customer churn in the telecommunications industry, featuring automated data cleaning, domain-driven feature engineering, multi-model comparison with and without SMOTE, stacking ensemble, and SHAP-based interpretability.
 
 ---
 
-## 📊 Dataset
+## 📊 Results Summary
 
-- Telco Customer Churn dataset (Kaggle)
-- Features include:
-  - Customer demographics
-  - Account information
-  - Services used
-  - Billing & contract details
+| Model | Setting | Accuracy | F1 (Churn) | ROC-AUC | PR-AUC |
+|-------|---------|----------|------------|---------|--------|
+| Logistic Regression | No SMOTE | 0.80 | 0.64 | **0.856** | **0.665** |
+| Decision Tree | No SMOTE | 0.76 | 0.54 | 0.701 | 0.388 |
+| Random Forest | No SMOTE | 0.83 | 0.57 | 0.846 | 0.639 |
+| XGBoost | No SMOTE | 0.79 | 0.52 | 0.824 | 0.591 |
+| Logistic Regression | With SMOTE | 0.81 | 0.64 | 0.855 | 0.657 |
+| Decision Tree | With SMOTE | 0.80 | 0.58 | 0.724 | 0.434 |
+| Random Forest | With SMOTE | 0.83 | **0.62** | 0.846 | 0.641 |
+| XGBoost | With SMOTE | 0.82 | 0.59 | 0.847 | 0.635 |
+| Stacking Ensemble | RF + XGB + LR | **0.83** | 0.55 | 0.843 | 0.634 |
 
----
-
-## 🛠️ Feature Engineering
-
-Key engineered features:
-
-- Customer lifecycle segmentation (tenure groups)
-- Revenue-based features (avg monthly spend, total charges groups)
-- Behavioral features (number of services, engagement score)
-- Interaction features (tenure × charges, contract × charges)
-- Risk indicators (contract risk, senior-alone flag)
+> **Key finding:** Logistic Regression achieves the best discriminative power (ROC-AUC 0.856), while Random Forest + SMOTE provides the best balance of accuracy and churn recall.
 
 ---
 
-## 🤖 Models Used
+## 🗂️ Project Structure
 
-### Baseline Models:
+```
+├── telco-customer-churn.ipynb   # Main notebook (full pipeline)
+├── README.md
+└── cleaned_data.csv             # Output of preprocessing pipeline (generated at runtime)
+```
+
+---
+
+## ⚙️ Pipeline Overview
+
+### 1. Data Cleaning
+- Detects and replaces proxy null values (`NA`, `None`, empty strings, etc.)
+- Drops columns with >50% missing values
+- Mean imputation for numeric, mode imputation for categorical columns
+- IQR-based outlier removal (1.5× fence)
+- Min-Max normalization
+
+### 2. Feature Engineering (15 new features)
+
+| Category | Features |
+|----------|----------|
+| Customer Lifecycle | `tenure_group`, `avg_monthly_spend` |
+| Spending Behavior | `high_value`, `totalcharges_group`, `monthly_contract_interaction`, `tenure_charge_interaction` |
+| Service Engagement | `num_services`, `service_diversity`, `has_support`, `security_services` |
+| Risk Indicators | `contract_risk`, `auto_payment`, `paperless_flag`, `senior_alone` |
+| Composite | `engagement_score` |
+
+### 3. Preprocessing & Feature Selection
+- `StandardScaler` for numeric features
+- `OneHotEncoder` for categorical features
+- `SelectFromModel` (Random Forest, median threshold)
+
+### 4. Models
 - Logistic Regression
 - Decision Tree
-
-### Advanced Models:
 - Random Forest
 - XGBoost
+- Stacking Ensemble (RF + XGBoost → Logistic Regression meta-learner)
 
-### Ensemble Method:
-- Stacking (Random Forest + XGBoost → Logistic Regression)
+Each model is trained in two settings: **standard** and **SMOTE-augmented**.
 
----
-
-## ⚖️ Handling Class Imbalance
-
-- SMOTE (Synthetic Minority Oversampling Technique)
-- Class weighting for baseline models
-- Comparison between SMOTE vs non-SMOTE approaches
+### 5. Evaluation
+- Accuracy, F1-score (churn class), ROC-AUC, PR-AUC
+- Precision-Recall Curve (Stacking Ensemble)
+- Feature Importance (Random Forest)
+- SHAP values (XGBoost)
 
 ---
 
-## 📈 Evaluation Metrics
+## 📦 Requirements
 
-Due to class imbalance, multiple metrics were used:
-
-- F1-score (primary metric)
-- ROC-AUC
-- Precision / Recall
-- PR-AUC
-
-> “Given the class imbalance, F1-score and ROC-AUC were used as primary evaluation metrics.”
+```bash
+pip install numpy pandas matplotlib seaborn scikit-learn xgboost imbalanced-learn shap
+```
 
 ---
 
-## 🧠 Explainability (XAI)
+## 🚀 How to Run
 
-Feature importance analysis revealed:
+1. Download the dataset from Kaggle:  
+   [Telco Customer Churn — IBM Dataset](https://www.kaggle.com/datasets/blastchar/telco-customer-churn)
 
-### Key Drivers of Churn:
-- Contract type (Month-to-month is highest risk)
-- Monthly charges
-- Customer tenure
-- Service usage (OnlineSecurity, TechSupport)
-- Engagement score
+2. Place the CSV file at:
+   ```
+   /kaggle/input/datasets/blastchar/telco-customer-churn/WA_Fn-UseC_-Telco-Customer-Churn.csv
+   ```
+   Or update the path in the notebook's **Load Data** cell.
 
----
-
-## 🏆 Key Results
-
-- Logistic Regression achieved highest ROC-AUC (~0.85)
-- XGBoost provided best balance between precision and recall
-- SMOTE had limited impact on performance improvement
-- Feature importance confirmed strong business interpretability
+3. Run all cells in `telco-customer-churn.ipynb`.
 
 ---
 
-## 💡 Business Insights
+## 🔍 Key Insights
 
-- Customers with **month-to-month contracts** are significantly more likely to churn
-- High monthly charges combined with low tenure increase churn risk
-- Lack of value-added services increases customer attrition
-- Improving onboarding and service adoption can reduce churn
-
----
-
-## 📌 Tech Stack
-
-- Python
-- Pandas, NumPy
-- Scikit-learn
-- XGBoost
-- Imbalanced-learn (SMOTE)
-- Matplotlib
-
+- **Contract type** is the strongest churn driver — month-to-month customers churn at significantly higher rates
+- **Tenure** is strongly negatively correlated with churn — longer customers are far less likely to leave
+- **High monthly charges** combined with short tenure represent the highest-risk customer segment
+- **SMOTE** improves minority class recall across all models with minimal accuracy trade-off
+- **Engineered features** (`engagement_score`, `contract_risk`) rank among the top 15 predictors
 
 ---
 
-## 🚀 Future Work
+## 📁 Dataset
 
-- SHAP-based explainability (local + global)
-- Hyperparameter tuning (Optuna)
-- Deployment as churn prediction API
-- Dashboard for business users
+**Source:** [IBM Telco Customer Churn](https://www.kaggle.com/datasets/blastchar/telco-customer-churn)  
+**Size:** 7,043 rows × 21 features  
+**Target:** `Churn` (Yes/No) — ~26.5% positive class
 
 ---
 
-## 👨‍💻 Author
+## 📄 License
 
-Data Science & Machine Learning Project  
-Focused on **business-driven AI and predictive analytics**
+This project is open-source and available under the [MIT License](LICENSE).
